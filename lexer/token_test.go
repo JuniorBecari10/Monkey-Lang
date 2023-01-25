@@ -6,13 +6,14 @@ import (
 )
 
 func TestNextToken(t *testing.T) {
-  input := "=="
+  input := "==!="
   
   tests := []struct {
     expectedType    token.TokenType
     expectedLiteral string
   } {
     {token.EQ, "=="},
+    {token.NOT_EQ, "!="},
     {token.EOF, ""},
   }
   

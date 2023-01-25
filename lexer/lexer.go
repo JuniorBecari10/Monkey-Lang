@@ -114,7 +114,7 @@ func (l *Lexer) readIdentifier() string {
 }
 
 func (l *Lexer) peekChar() byte {
-  if l.readPosition := len(l.input) {
+  if l.readPosition >= len(l.input) {
     return 0
   } else {
     return l.input[l.readPosition]
