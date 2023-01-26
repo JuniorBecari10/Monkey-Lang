@@ -1,5 +1,7 @@
 package ast
 
+import "monkey/token"
+
 type Node interface {
   TokenLiteral() string
 }
@@ -33,7 +35,7 @@ type LetStatement struct {
 }
 
 func (ls *LetStatement) statementNode()     {}
-func (ls *LetStatement) TokenLiteral string { return ls.Token.Literal }
+func (ls *LetStatement) TokenLiteral() string { return ls.Token.Literal }
 
 type Identifier struct {
   Token token.Token
@@ -42,4 +44,3 @@ type Identifier struct {
 
 func (i *Identifier) expressionNode()      {}
 func (i *Identifier) TokenLiteral() string { return i.Token.Literal }
-
