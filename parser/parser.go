@@ -2,6 +2,7 @@ package parser
 
 import (
   "fmt"
+  "strconv"
   
   "monkey/ast"
   "monkey/lexer"
@@ -42,11 +43,37 @@ func New(l *lexer.Lexer) *Parser {
     errors: make([]string, 0),
   }
   
+  p.prefixParseFns = make(map[token.TokenType]prefixParseFn)
+  
+  p.registerPrefix(token.IDENT, p.parseIdentifier)
+  p.registerPrefix(token.INT, p.parseIntegerLiteral)
+  
   // read 2 tokens
   p.nextToken()
   p.nextToken()
   
   return p
+}
+
+func (p *Parser) parseIdentifier() ast.Expression {
+  return &ast.Identifier { Token: p.curToken, Value: p.curToken.Literal }
+}
+
+func (p *Parser) parseIntegerLiteral() ast.Expression {
+  lit := &ast.IntegerLiteral { Token: p.curToken }
+  
+  value, err := strconv.ParseInt(p.curToken.Literal, 0, 64)
+  
+  if err != nil {
+    msg := fmt.Sprintf("could not parse %q as integer", p.curToken.Literal)
+    p.errors = append(p.errors, msg)
+    
+    return nil
+  }
+  
+  lit.Value = value
+  
+  return lit
 }
 
 func (p *Parser) nextToken() {
@@ -132,10 +159,10 @@ func (p *Parser) parseReturnStatement() *ast.ReturnStatement {
 func (p *Parser) parseExpressionStatement() *ast.ExpressionStatement {
   stmt := &ast.ExpressionStatement { Token: p.curToken }
   
-  stmt.Expression = p.ParseExpression(LOWEST)
+  stmt.Expression = p.parseExpression(LOWEST)
   
   if p.peekTokenIs(token.SEMICOLON) {
-    p.NextToken()
+    p.nextToken()
   }
   
   return stmt
@@ -159,6 +186,17 @@ func (p *Parser) expectPeek(t token.TokenType) bool {
     
     return false
   }
+}
+
+func (p *Parser) parseExpression(precedence int) ast.Expression {
+  prefix := p.prefixParseFns[p.curToken.Type]
+  
+  if prefix == nil {
+    return nil
+  }
+  
+  leftExp := prefix()
+  return leftExp
 }
 
 func (p *Parser) registerPrefix(tokenType token.TokenType, fn prefixParseFn) {
